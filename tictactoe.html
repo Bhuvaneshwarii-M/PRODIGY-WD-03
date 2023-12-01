@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5e3e3;
+    }
+
+    #tic-tac-toe {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 10px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 2px solid #000;
+      background-color: #ffc0cb;
+      color: #000;
+      transition: background-color 0.3s;
+    }
+
+    .cell:hover {
+      background-color: #ff69b4;
+    }
+
+    .winner {
+      animation: highlightWinner 1s ease-in-out, flowerShower 2s ease-in-out;
+    }
+
+    .loser {
+      animation: sadEmoji 1s ease-in-out;
+    }
+
+    .draw {
+      animation: sadEmoji 1s ease-in-out, shake 0.5s ease-in-out;
+    }
+
+    @keyframes highlightWinner {
+      0%, 100% {
+        background-color: #ffc0cb;
+      }
+      50% {
+        background-color: #ff69b4;
+      }
+    }
+
+    @keyframes flowerShower {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-50px);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes sadEmoji {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.5);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      25%, 75% {
+        transform: translateX(-10px);
+      }
+      50% {
+        transform: translateX(10px);
+      }
+    }
+
+    #congratulations-card,
+    #draw-card {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      z-index: 999;
+    }
+
+    #restart-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+    }
+
+    #restart-button:hover {
+      background-color: #45a049;
+    }
+  </style>
+  <title>Tic Tac Toe</title>
+</head>
+<body>
+  <div id="tic-tac-toe"></div>
+  <div id="congratulations-card">
+    <h2>Congratulations!</h2>
+    <p id="congratulations-message"></p>
+    <button id="restart-button">Restart Game</button>
+  </div>
+  <div id="draw-card">
+    <h2>Match is Draw</h2>
+    <p id="draw-message">😢</p>
+    <button id="restart-button-draw">Restart Game</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const board = document.getElementById('tic-tac-toe');
+      const congratulationsCard = document.getElementById('congratulations-card');
+      const drawCard = document.getElementById('draw-card');
+      const congratulationsMessage = document.getElementById('congratulations-message');
+      const drawMessage = document.getElementById('draw-message');
+      const restartButton = document.getElementById('restart-button');
+      const restartButtonDraw = document.getElementById('restart-button-draw');
+      let currentPlayer = 'X';
+      let gameOver = false;
+
+      function checkWinner() {
+        const cells = document.querySelectorAll('.cell');
+        const winningCombinations = [
+          [0, 1, 2], [3, 4, 5], [6, 7, 8],
+          [0, 3, 6], [1, 4, 7], [2, 5, 8],
+          [0, 4, 8], [2, 4, 6]
+        ];
+
+        for (const combination of winningCombinations) {
+          const [a, b, c] = combination;
+          if (
+            cells[a].innerText === currentPlayer &&
+            cells[b].innerText === currentPlayer &&
+            cells[c].innerText === currentPlayer
+          ) {
+            cells[a].classList.add('winner');
+            cells[b].classList.add('winner');
+            cells[c].classList.add('winner');
+            gameOver = true;
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      function checkDraw() {
+        const cells = document.querySelectorAll('.cell');
+        for (const cell of cells) {
+          if (cell.innerText === '') {
+            return false; // If there's an empty cell, the game is not a draw
+          }
+        }
+        return true; // All cells are filled, the game is a draw
+      }
+
+      function showCongratulationsMessage() {
+        if (currentPlayer === 'X') {
+          congratulationsMessage.innerText = 'Player X wins! 🌸';
+        } else {
+          congratulationsMessage.innerText = 'Player O wins! 🌸';
+        }
+        congratulationsCard.style.display = 'block';
+      }
+
+      function showDrawMessage() {
+        drawCard.style.display = 'block';
+      }
+
+      function hideCongratulationsCard() {
+        congratulationsCard.style.display = 'none';
+      }
+
+      function hideDrawCard() {
+        drawCard.style.display = 'none';
+      }
+
+      function handleClick(index) {
+        if (gameOver || board.children[index].innerText !== '') {
+          return;
+        }
+
+        board.children[index].innerText = currentPlayer;
+
+        if (checkWinner()) {
+          showCongratulationsMessage();
+        } else if (checkDraw()) {
+          showDrawMessage();
+        } else {
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+      }
+
+      function restartGame() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          cell.innerText = '';
+          cell.classList.remove('winner');
+        });
+
+        currentPlayer = 'X';
+        gameOver = false;
+        hideCongratulationsCard();
+        hideDrawCard();
+      }
+
+      function createCell(index) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.addEventListener('click', () => handleClick(index));
+        return cell;
+      }
+
+      for (let i = 0; i < 9; i++) {
+        board.appendChild(createCell(i));
+      }
+
+      restartButton.addEventListener('click', restartGame);
+      restartButtonDraw.addEventListener('click', restartGame);
+    });
+  </script>
+</body>
+</html>
